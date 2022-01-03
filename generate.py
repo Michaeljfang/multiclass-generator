@@ -78,8 +78,15 @@ def clusters(number_of_centers: int = 2, number_of_datapoints: (int or tuple) = 
     cluster_indices=[]              # list of cluster indices that the rows in the list above correspond to
 
     for cluster in range(number_of_centers):
-
         cluster_index=np.ones((number_of_datapoints[cluster], 1))*cluster # gets the data's cluster. This is used to build the reference categorization (supervised learning).
+        
+        # how data points are generated:
+        # First a cloud is generated. This is based on a point.
+        # If the shape of cloud is set to anything other than "point",
+        # move each of the points in the cloud along a randomly sampled vector in the shape.
+        # for example: if the shape is specified by a curve, sample random points (position vectors) on that curve and move points in the cloud by those vectors.
+        # If the shape is point, move all points in the cloud to the location of the cloud, decided by "center_to".
+
         cloud=_euclidean_normalize(np.tan(1.5708*np.random.random((number_of_datapoints[cluster], dimensions))-0.5))*(np.random.random((number_of_datapoints[cluster], dimensions))*2-1) # starts to generate the actual data.
         #    radius modifier | ^^ normalizes vector relative to center |^^ generates the random data. These decides the outer limit | ^^ adjusts location so the data points fill the area.
 
@@ -87,9 +94,10 @@ def clusters(number_of_centers: int = 2, number_of_datapoints: (int or tuple) = 
             cloud=cloud*2*radii[cluster]-radii[cluster]
             if opposite:
                 if cluster==0:
-                    center_to=np.multiply(_euclidean_normalize(np.random.random((1, dimensions))), np.square(distance))
+                    center_to=np.multiply(_euclidean_normalize( np.tan( 3.1415926536*(np.random.random((1, dimensions))-0.5))  ), np.square(distance))
+                    cluster0_center=center_to
                 elif cluster==1:
-                    center_to=np.multiply(_euclidean_normalize(np.random.random((1, dimensions))), -np.square(distance))
+                    center_to=-1*cluster0_center
             else:
                 center_to=np.multiply(_euclidean_normalize(np.tan(1.5708*np.random.random((1, dimensions))-0.5)), np.sign(distances[cluster])*np.square(distances[cluster]))
             
@@ -121,4 +129,8 @@ def clusters(number_of_centers: int = 2, number_of_datapoints: (int or tuple) = 
     cluster_indices=summary[:, -1:]
     
     return (generated_data, cluster_indices)
+
+if __name__=="__main__":
+    data, label=clusters(5, 50, radii=np.random.random(size=999)/2 +1, distance=2, dimensions=2, opposite=True)
+    print(label)
 
